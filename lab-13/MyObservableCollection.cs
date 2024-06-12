@@ -7,9 +7,23 @@ namespace lab_13
 {
   internal class MyObservableCollection<T> : MyCollection<T>, IList<T> where T : IBaseProperties, ICloneable, IInit, new()
   {
+    bool isReadOnly = false;
+
     public MyObservableCollection() { }
 
     delegate int Handler(T item, T example);
+
+    #region Будущие делегаты
+    int IdentityCheck(T item, T example)
+    {
+      if (item.GetType() == example.GetType() && item.YearOfIssue == example.YearOfIssue && item.BrandName == example.BrandName)
+        return 1;
+      else
+        return -1;
+    } //сделано
+
+
+    #endregion
 
     int ForEach(T item, Handler handler)
     {
@@ -29,23 +43,28 @@ namespace lab_13
       }
     }
 
-    int IdentityCheck(T item, T example)
+    Node<T> GetNodeWithIndex(int index)
     {
-      if (item.GetType() == example.GetType() && item.YearOfIssue == example.YearOfIssue && item.BrandName == example.BrandName)
-        return 1;
-      else
-        return -1;
+      if (index > Count - 1)
+        throw new ArgumentOutOfRangeException();
+      Node<T> result = First;
+      for (int i = 0; i < index; i++)
+        result = result.Next;
+      return result;
     }
 
+    public T this[int index]
+    {
+      get => GetNodeWithIndex(index).Value;
+      set => GetNodeWithIndex(index).Value = value;
+    } //сделано
 
-    public T this[int index] { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-
-    public bool IsReadOnly => throw new NotImplementedException();
+    public bool IsReadOnly { get => isReadOnly; }
 
     public void Clear()
     {
-      throw new NotImplementedException();
-    }
+      this.CollectionReset();
+    } //сделано
 
     public bool Contains(T item)
     {
@@ -53,41 +72,91 @@ namespace lab_13
         return true;
       else
         return false;
-    }
+    } //сделано
 
     public void CopyTo(T[] array, int arrayIndex)
     {
-      throw new NotImplementedException();
-    }
+      Node<T> node = GetNodeWithIndex(arrayIndex);
+      for (int i = 0; i < array.Length && node != null; i++)
+      {
+        array[i] = node.Value;
+        node = node.Next;
+      }
 
-    public IEnumerator<T> GetEnumerator()
-    {
-      throw new NotImplementedException();
-    }
+    } // сделано
 
-    public int IndexOf(T item)
-    {
-      throw new NotImplementedException();
-    }
+    public int IndexOf(T item) => ForEach(item, IdentityCheck); // сделано
 
     public void Insert(int index, T item)
     {
       Insert(item, index);
-    }
+    } //сделано
 
     public bool Remove(T item)
     {
-      throw new NotImplementedException();
-    }
+      int index = IndexOf(item);
+      if (index > -1)
+        DeleteNode(GetNodeWithIndex(index));
+      else
+        return false;
+      return true;
+    } //сделано
 
     public void RemoveAt(int index)
     {
-      throw new NotImplementedException();
+      if (index > -1)
+        DeleteNode(GetNodeWithIndex(index));
+    } //сделано
+
+
+    public IEnumerator<T> GetEnumerator()
+    {
+      T[] values = new T[Count];
+      CopyTo(values, 0);
+      return values.Take(Count).GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()
     {
-      throw new NotImplementedException();
+      return this.GetEnumerator();
     }
+
+    //}
+
+    //class Enumer<T>// where T : IBaseProperties, ICloneable, IInit, new()
+    //{
+    //Node<T> example;
+    //Enumer(Node<T> node)
+    //{
+    //  example = node;
+    //}
+
+    //void IEnumerator.Reset() => position = -1;
+
+    //int position = -1;
+
+    //object Current
+    //{
+    //  get
+    //  {
+    //    if (position == -1 || position > Count - 1)
+    //      throw new ArgumentException();
+    //    return this[position]; ;
+    //  }
+    //}
+
+    //object IEnumerator.Current => throw new NotImplementedException();
+
+    //bool IEnumerator.MoveNext()
+    //{
+    //  if (position < Count - 1)
+    //  {
+    //    position++;
+    //    return true;
+    //  }
+    //  else
+    //    return false;
+    //}
+    //}
   }
 }

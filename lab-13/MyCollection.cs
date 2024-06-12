@@ -72,7 +72,7 @@ namespace lab_12
         return "Коллекция пуста.";
       else
       {
-        uint counter = 1;
+        uint counter = 2;
         string output = "1. ";
         Node<T> current = First;
         while (current != null)
@@ -120,6 +120,11 @@ namespace lab_12
       {
         AddFirst(item);
         return "Вы ввели слишком малый номер элемента. Элемент был записан в начало.";
+      }
+      else if (index == 0)
+      {
+        AddFirst(item);
+        return "";
       }
       else
       {
@@ -176,7 +181,7 @@ namespace lab_12
     //}
 
     #region Удаление
-    void DeleteNode(Node<T> node)
+    internal void DeleteNode(Node<T> node)
     {
       if (node.Next == null && node.Previous == null) // нода - единственный элемент в списке
       {
