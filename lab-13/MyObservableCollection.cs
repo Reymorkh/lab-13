@@ -5,15 +5,21 @@ using System.Collections;
 
 namespace lab_13
 {
+  delegate void SizeChanged(object source, CollectionHandlerEventArgs );
+
   internal class MyObservableCollection<T> : MyCollection<T>, IList<T> where T : IBaseProperties, ICloneable, IInit, new()
   {
-    bool isReadOnly = false;
+    public event SizeChanged CollectionCountChanged, CollectionReferenceChanged;
 
+    bool isReadOnly = false;
+    
     public MyObservableCollection() { }
+
+    public MyObservableCollection(int length) : base(length) { }
 
     delegate int Handler(T item, T example);
 
-    #region Будущие делегаты
+    #region Будущий корм для делегатов
     int IdentityCheck(T item, T example)
     {
       if (item.GetType() == example.GetType() && item.YearOfIssue == example.YearOfIssue && item.BrandName == example.BrandName)
@@ -85,7 +91,19 @@ namespace lab_13
 
     } // сделано
 
-    public int IndexOf(T item) => ForEach(item, IdentityCheck); // сделано
+    public int IndexOf(T item) 
+    {
+      Node<T> temp = First;
+      int counter = 0;
+      while (temp != null)
+      {
+        if (item.GetType() == temp.Value.GetType() && item.YearOfIssue == temp.Value.YearOfIssue && item.BrandName == temp.Value.BrandName)
+          return counter;
+        temp = temp.Next;
+        counter++;
+      }
+      return -1;
+    } // сделано
 
     public void Insert(int index, T item)
     {

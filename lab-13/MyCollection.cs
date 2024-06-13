@@ -64,6 +64,7 @@ namespace lab_12
         tempNode = newNode;
       }
       Last = tempNode;
+      count = length;
     }
 
     public string ShowItems()

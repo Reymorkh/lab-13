@@ -82,7 +82,7 @@ namespace lab_13
 
           case "observe":
             if (observables != null && doShowColl)
-              Console.WriteLine(list.ShowItems());
+              Console.WriteLine(observables.ShowItems());
             else if (observables != null && !doShowColl)
               Console.WriteLine("Коллекция не отображается.");
             else
@@ -128,14 +128,13 @@ namespace lab_13
             switch (observablesoption)
             {
               case "base":
-                Console.WriteLine("1. " + (list == null ? "Создать" : "Пересоздать") + " коллекцию.\n2. Добавить объект в коллекцию.\n3. Удаление объекта из коллекции.\n4. Отображать список: " + (doShowColl ? "on" : "off") + ".\n5.Сформировать новый список через рнг\n0. Выход.");
+                Console.WriteLine("1. " + (observables == null ? "Создать" : "Пересоздать") + " коллекцию.\n2. Добавить объект в коллекцию.\n3. Удаление объекта из коллекции.\n4. Отображать список: " + (doShowColl ? "on" : "off") + ".\n5.Сформировать новый список через рнг\n0. Выход.");
                 break;
               case "add":
                 Console.WriteLine("1. В начало.\n2. По номеру.\n3. В конец.\n4. Добавлять случайно созданный объект: " + (randomnessFlag ? "on" : "off") + ".\n0. Назад.");
                 break;
               case "delete":
-
-                Console.WriteLine("1. Первого.\n2. По году выпуска.\n3. По названию бренда.\n4. Удалить последний.\n0. Назад.");
+                Console.WriteLine("1. Первого.\n2. Через ввод объекта типа.\n3. По номеру.\n4. Если забыли убрать случайное создание: " + (randomnessFlag ? "on" : "off") + ".\n0. Назад.");
                 break;
             }
             break;
@@ -157,7 +156,6 @@ namespace lab_13
               case "base":
                 menuOptions = "list";
                 break;
-
               case "list":
                 switch (linkedlistoption)
                 {
@@ -183,16 +181,23 @@ namespace lab_13
                 switch (observablesoption)
                 { 
                   case "base":
-
+                    if (observables != null)
+                      observables.CollectionReset();
+                    else
+                      observables = new MyObservableCollection<Watch>();
                     break;
                   case "add":
-                    observables.Insert(0, );
+                    observables.AddFirst(CreateWatchObject());
                   break;
+                  case "delete":
+                    observables.DeleteFirst();
+                    if (observables.Count == 0)
+                    observablesoption = "base";
+                    break;
                 }
                     break; 
             }
             break;
-
           case "2":
             switch (menuOptions)
             {
@@ -206,7 +211,7 @@ namespace lab_13
                     if (list != null)
                       linkedlistoption = "add";
                     else
-                      errorMessage = "Нельзя добавить объект в несущестувующую коллекции.";
+                      errorMessage = "Нельзя добавить объект в несуществующую коллекцию.";
                     break;
 
                   case "add": //добавление по индексу
@@ -220,9 +225,29 @@ namespace lab_13
                     break;
                 }
                 break;
+              case "observe":
+                switch (observablesoption)
+                {
+                  case "base": // переключение на добавление
+                    if (observables != null)
+                      observablesoption = "add";
+                    else
+                      errorMessage = "Нельзя добавить объект в несуществующую коллекцию.";
+                    break;
+
+                  case "add": //добавление по индексу
+                    errorMessage = observables.Insert(CreateWatchObject(), GetShort("номер добавляемого элемента") - 1);
+                    break;
+
+                  case "delete": //удаление через ввод предмета
+                    errorMessage = observables.Remove(CreateWatchObject()) ? "" : "Объект не был найден.";
+                    if (observables.Count == 0)
+                      observablesoption = "base";
+                    break;
+                }
+                break;
             }
             break;
-
           case "3":
             switch (menuOptions)
             {
@@ -247,9 +272,36 @@ namespace lab_13
                     break;
                 }
                 break;
+              case "observe":
+                switch (observablesoption)
+                {
+                  case "base": // переключение на удаление
+                    if (observables != null && observables.Count != 0)
+                      observablesoption = "delete";
+                    else
+                      errorMessage = "Нельзя удалить объект из " + (observables == null ? "несущестувующей" : "пустой") + " коллекции.";
+                    break;
+
+                  case "add": //добавление в конец
+                    observables.Add(CreateWatchObject());
+                    break;
+
+                  case "delete": //удаление по индексу
+                    try
+                    {
+                      observables.RemoveAt(GetShort("номер") - 1);
+                    if (observables.Count == 0)
+                      observablesoption = "base";
+                    }
+                    catch(Exception)
+                    {
+                      errorMessage = "Был введён неверный номер.";
+                    }
+                    break;
+                }
+                break;
             }
             break;
-
           case "4":
             switch (menuOptions)
             {
@@ -259,7 +311,6 @@ namespace lab_13
                   case "base":
                     doShowColl = doShowColl ? false : true;
                     break;
-
                   case "add":
                     randomnessFlag = randomnessFlag ? false : true;
                     break;
@@ -267,6 +318,20 @@ namespace lab_13
                     errorMessage = list.DeleteLast();
                     if (list.Count == 0)
                       linkedlistoption = "base";
+                    break;
+                }
+                break;
+              case "observe":
+                switch (observablesoption)
+                {
+                  case "base":
+                    doShowColl = doShowColl ? false : true;
+                    break;
+                  case "add":
+                    randomnessFlag = randomnessFlag ? false : true;
+                    break;
+                  case "delete":
+                    randomnessFlag = randomnessFlag ? false : true;
                     break;
                 }
                 break;
@@ -284,6 +349,20 @@ namespace lab_13
                     {
                       Console.Clear();
                       list = new MyCollection<Watch>(GetInt("длину списка"));
+                    }
+                    else
+                      errorMessage = "Создайте список, прежде чем его редактировать.";
+                    break;
+                }
+                break;
+              case "observe":
+                switch (observablesoption)
+                {
+                  case "base":
+                    if (observables != null)
+                    {
+                      Console.Clear();
+                      observables = new MyObservableCollection<Watch>(GetInt("длину списка"));
                     }
                     else
                       errorMessage = "Создайте список, прежде чем его редактировать.";
@@ -317,6 +396,21 @@ namespace lab_13
                   case "delete":
                     linkedlistoption = "base";
                     break;
+                }
+                break;
+              case "observe":
+                switch (observablesoption)
+                {
+                  case "base":
+                    menuOptions = "base";
+                    break;
+                  case "add":
+                    observablesoption = "base";
+                    break;
+                  case "delete":
+                    observablesoption = "base";
+                    break;
+
                 }
                 break;
             }
