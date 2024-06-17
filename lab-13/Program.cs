@@ -6,6 +6,17 @@ namespace lab_13
 {
   internal class Program
   {
+    //class Event
+    //{
+    //  static void handler()
+    //  {
+    //    Console.WriteLine("Произошло");
+    //  }
+    //}
+
+
+
+
     public static bool randomnessFlag = false;
     public static Watch CreateWatchObject()
     {
@@ -53,6 +64,7 @@ namespace lab_13
 
       MyCollection<Watch> list = null;  // = new DoublyLinkedList();
       MyObservableCollection<Watch> observables = null;
+      Journal journal = null;
 
       string menu = "",
         errorMessage = "",
@@ -128,15 +140,19 @@ namespace lab_13
             switch (observablesoption)
             {
               case "base":
-                Console.WriteLine("1. " + (observables == null ? "Создать" : "Пересоздать") + " коллекцию.\n2. Добавить объект в коллекцию.\n3. Удаление объекта из коллекции.\n4. Отображать список: " + (doShowColl ? "on" : "off") + ".\n5.Сформировать новый список через рнг\n0. Выход.");
+                Console.WriteLine("1. " + (observables == null ? "Создать" : "Пересоздать") + " коллекцию.\n2. Добавить объект в коллекцию.\n3. Удаление объекта из коллекции.\n4. Отображать список: " + (doShowColl ? "on" : "off") + ".\n5.Сформировать новый список через рнг\n6.Показать журнал.\n0. Выход.");
                 break;
               case "add":
-                Console.WriteLine("1. В начало.\n2. По номеру.\n3. В конец.\n4. Добавлять случайно созданный объект: " + (randomnessFlag ? "on" : "off") + ".\n0. Назад.");
+                Console.WriteLine("1. В начало.\n2. По номеру.\n3. В конец.\n4. Добавлять случайно созданный объект: " + (randomnessFlag ? "on" : "off") + ".\n5.Заменить существующий элемент новым.\n0. Назад.");
                 break;
               case "delete":
                 Console.WriteLine("1. Первого.\n2. Через ввод объекта типа.\n3. По номеру.\n4. Если забыли убрать случайное создание: " + (randomnessFlag ? "on" : "off") + ".\n0. Назад.");
                 break;
             }
+            break;
+          case "journal":
+            journal.PrintJournal();
+            Console.WriteLine("1.Очистить журнал. 0.Вернуться.");
             break;
         }
         #endregion
@@ -179,23 +195,36 @@ namespace lab_13
                 break;
               case "observe":
                 switch (observablesoption)
-                { 
+                {
                   case "base":
                     if (observables != null)
+                    {
                       observables.CollectionReset();
+                      journal.Reset();
+                      observables.CollectionCountChanged += journal.WriteRecord;
+                      observables.CollectionReferenceChanged += journal.WriteRecord;
+                    }
                     else
+                    {
                       observables = new MyObservableCollection<Watch>();
+                      journal = new Journal();
+                      observables.CollectionCountChanged += journal.WriteRecord;
+                      observables.CollectionReferenceChanged += journal.WriteRecord;
+                    }
                     break;
                   case "add":
-                    observables.AddFirst(CreateWatchObject());
+                    observables.Insert(0, CreateWatchObject());
                   break;
                   case "delete":
-                    observables.DeleteFirst();
+                    observables.RemoveAt(0);
                     if (observables.Count == 0)
-                    observablesoption = "base";
+                      observablesoption = "base";
                     break;
                 }
-                    break; 
+                break;
+              case "journal":
+                journal.Reset();
+                break;
             }
             break;
           case "2":
@@ -236,7 +265,7 @@ namespace lab_13
                     break;
 
                   case "add": //добавление по индексу
-                    errorMessage = observables.Insert(CreateWatchObject(), GetShort("номер добавляемого элемента") - 1);
+                    observables.Insert(GetShort("номер добавляемого элемента") - 1, CreateWatchObject());
                     break;
 
                   case "delete": //удаление через ввод предмета
@@ -283,7 +312,7 @@ namespace lab_13
                     break;
 
                   case "add": //добавление в конец
-                    observables.Add(CreateWatchObject());
+                    observables.Insert(observables.Count, CreateWatchObject());
                     break;
 
                   case "delete": //удаление по индексу
@@ -362,16 +391,42 @@ namespace lab_13
                     if (observables != null)
                     {
                       Console.Clear();
-                      observables = new MyObservableCollection<Watch>(GetInt("длину списка"));
+                      observables = new MyObservableCollection<Watch>(GetInt("длину списка"), journal);
                     }
                     else
                       errorMessage = "Создайте список, прежде чем его редактировать.";
+                    break;
+                  case "add":
+                    try
+                    {
+                      observables.Replace(GetInt("номер объекта на замену") - 1, CreateWatchObject());
+                    }
+                    catch(Exception ex)
+                    {
+                      errorMessage = "Был введён неверный номер объекта.";
+                    }
                     break;
                 }
                 break;
             }
             break;
 
+          case "6":
+            switch (menuOptions)
+            {
+              case "observe":
+                switch (observablesoption)
+                {
+                  case "base":
+                    if (observables != null)
+                    {
+                      menuOptions = "journal";
+                    }
+                    break;
+                }
+                break;
+            }
+            break;
 
           //    case "delete":
           //    list.DeleteByName(GetString("имя брэнда для удаления"));
@@ -410,9 +465,11 @@ namespace lab_13
                   case "delete":
                     observablesoption = "base";
                     break;
-
                 }
                 break;
+              case "journal":
+                menuOptions = "observe";
+                    break;
             }
             break;
         }

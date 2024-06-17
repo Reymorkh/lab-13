@@ -5,21 +5,34 @@ using System.Collections;
 
 namespace lab_13
 {
-  delegate void SizeChanged(object source, CollectionHandlerEventArgs );
+  delegate void CollectionHandler(object source, CollectionHandlerEventArgs e);
 
   internal class MyObservableCollection<T> : MyCollection<T>, IList<T> where T : IBaseProperties, ICloneable, IInit, new()
   {
-    public event SizeChanged CollectionCountChanged, CollectionReferenceChanged;
+    public event CollectionHandler CollectionCountChanged, CollectionReferenceChanged;
+
+    public void OnChange(object source, CollectionHandlerEventArgs e)
+    {
+      CollectionCountChanged?.Invoke(source, e);
+    }
+    public void OnReferenceChange(object source, CollectionHandlerEventArgs e)
+    {
+      CollectionReferenceChanged?.Invoke(source, e);
+    }
 
     bool isReadOnly = false;
     
     public MyObservableCollection() { }
 
-    public MyObservableCollection(int length) : base(length) { }
+    public MyObservableCollection(int length, Journal journal) : base(length)
+    {
+      this.CollectionCountChanged += journal.WriteRecord;
+      OnChange(null, new CollectionHandlerEventArgs(null, "Была создана коллекция на  " + length + " элементов"));
+    }
 
     delegate int Handler(T item, T example);
 
-    #region Будущий корм для делегатов
+    #region
     int IdentityCheck(T item, T example)
     {
       if (item.GetType() == example.GetType() && item.YearOfIssue == example.YearOfIssue && item.BrandName == example.BrandName)
@@ -108,13 +121,17 @@ namespace lab_13
     public void Insert(int index, T item)
     {
       Insert(item, index);
+      OnChange(this[index], new CollectionHandlerEventArgs(index, "Был добавлен", this[index]));
     } //сделано
 
     public bool Remove(T item)
     {
       int index = IndexOf(item);
       if (index > -1)
+      {
+        OnChange(this[index], new CollectionHandlerEventArgs(index, "Был удалён", this[index]));
         DeleteNode(GetNodeWithIndex(index));
+      }
       else
         return false;
       return true;
@@ -123,9 +140,17 @@ namespace lab_13
     public void RemoveAt(int index)
     {
       if (index > -1)
+      {
+        OnChange(this[index], new CollectionHandlerEventArgs(index, "Был удалён", this[index]));
         DeleteNode(GetNodeWithIndex(index));
+      }
     } //сделано
 
+    public void Replace(int index,T item)
+    {
+      OnReferenceChange(this[index], new CollectionHandlerEventArgs(index, $"Объект коллекции {this[index]}с номером {index + 1} был заменён новым элементом {this[index]}", this[index]));
+      GetNodeWithIndex(index).Value = item;
+    }
 
     public IEnumerator<T> GetEnumerator()
     {

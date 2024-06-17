@@ -8,8 +8,15 @@ namespace lab_13
 {
   internal class CollectionHandlerEventArgs:EventArgs
   {
-    public int Number { get; set; }
-    public int Status { get; set; }
-    public object Object { get; set; }
+    public int? Index { get; set; }
+    public string? Status { get; set; }
+    public object? Object { get; set; }
+
+    public CollectionHandlerEventArgs(int? number = null, string? status = null, object? obj = null)
+    {
+      Index = number;
+      Status = status;
+      Object = obj;
+    }
   }
 }
