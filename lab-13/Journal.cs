@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace lab_13
 {
-  internal class Journal
+  public class Journal
   {
     List<string> journal = new List<string>();
    // List<object?> Nodes = new List<object?>();
@@ -16,9 +16,9 @@ namespace lab_13
     public void WriteRecord(object source, CollectionHandlerEventArgs e)
     {
       if (e.Status == "Был добавлен" || e.Status == "Был удалён")
-        journal.Add($"{e.Status} элемент {e.Object}, позиция {e.Index + 1}.");
+        journal.Add($"{e.Status} элемент {e.Object}, позиция {e.Index + 1}" + (e.CollName == null ? "." : $". коллекция: {e.CollName}"));
       else
-        journal.Add(e.Status);
+        journal.Add(e.Status + (e.CollName == null ? "." : $", коллекция: {e.CollName}"));
       //Nodes.Add(e.Object);
     }
 

@@ -5,9 +5,9 @@ using System.Collections;
 
 namespace lab_13
 {
-  delegate void CollectionHandler(object source, CollectionHandlerEventArgs e);
+  public delegate void CollectionHandler(object source, CollectionHandlerEventArgs e);
 
-  internal class MyObservableCollection<T> : MyCollection<T>, IList<T> where T : IBaseProperties, ICloneable, IInit, new()
+  public class MyObservableCollection<T> : MyCollection<T>, IList<T> where T : IBaseProperties, ICloneable, IInit, new()
   {
     public event CollectionHandler CollectionCountChanged, CollectionReferenceChanged;
 
@@ -118,18 +118,18 @@ namespace lab_13
       return -1;
     } // сделано
 
-    public void Insert(int index, T item)
+    public void Insert(int index, T item, string collname)
     {
       Insert(item, index);
-      OnChange(this[index], new CollectionHandlerEventArgs(index, "Был добавлен", this[index]));
+      OnChange(this[index], new CollectionHandlerEventArgs(index, "Был добавлен", this[index], collname));
     } //сделано
 
-    public bool Remove(T item)
+    public bool Remove(T item, string collname)
     {
       int index = IndexOf(item);
       if (index > -1)
       {
-        OnChange(this[index], new CollectionHandlerEventArgs(index, "Был удалён", this[index]));
+        OnChange(this[index], new CollectionHandlerEventArgs(index, "Был удалён", this[index], collname));
         DeleteNode(GetNodeWithIndex(index));
       }
       else
@@ -137,18 +137,18 @@ namespace lab_13
       return true;
     } //сделано
 
-    public void RemoveAt(int index)
+    public void RemoveAt(int index, string collname = null)
     {
       if (index > -1)
       {
-        OnChange(this[index], new CollectionHandlerEventArgs(index, "Был удалён", this[index]));
+        OnChange(this[index], new CollectionHandlerEventArgs(index, "Был удалён", this[index], collname));
         DeleteNode(GetNodeWithIndex(index));
       }
     } //сделано
 
-    public void Replace(int index,T item)
+    public void Replace(int index,T item, string collname = null)
     {
-      OnReferenceChange(this[index], new CollectionHandlerEventArgs(index, $"Объект коллекции {this[index]}с номером {index + 1} был заменён новым элементом {this[index]}", this[index]));
+      OnReferenceChange(this[index], new CollectionHandlerEventArgs(index, $"Объект {this[index]}с номером {index + 1} был заменён новым элементом {item}", this[index] + (collname == null ? "." : $". коллекция: {collname}")));
       GetNodeWithIndex(index).Value = item;
     }
 
@@ -162,6 +162,21 @@ namespace lab_13
     IEnumerator IEnumerable.GetEnumerator()
     {
       return this.GetEnumerator();
+    }
+
+    public void Insert(int index, T item)
+    {
+      Insert(index, item, null);
+    }
+
+    public void RemoveAt(int index)
+    {
+      RemoveAt(index, null);
+    }
+
+    public bool Remove(T item)
+    {
+      return Remove(item, null);
     }
 
     //}
